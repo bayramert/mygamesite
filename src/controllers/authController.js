@@ -1,39 +1,43 @@
 const bcrypt = require('bcryptjs');
 const { readDB, writeDB } = require('../config/db');
 
+// ───────────────────────────────
 // KAYIT OL
+// ───────────────────────────────
 async function register(req, res) {
-  const { username, email, password } = req.body;
 
-  if (!username || !email || !password) {
+  // Yeni alanları al: ad, soyad, kullanıcı adı, email, şifre
+  const { firstName, lastName, username, email, password } = req.body;
+
+  // Tüm alanlar dolu mu kontrol et
+  if (!firstName || !lastName || !username || !email || !password)
     return res.status(400).json({ message: 'Tüm alanları doldur.' });
-  }
 
-  if (password.length < 6) {
+  if (password.length < 6)
     return res.status(400).json({ message: 'Şifre en az 6 karakter olmalı.' });
-  }
+
+  if (!email.includes('@') || !email.includes('.'))
+    return res.status(400).json({ message: 'Geçerli bir email gir.' });
 
   try {
     const db = readDB();
 
-    // Email veya username daha önce alınmış mı?
+    // Email veya kullanıcı adı daha önce alınmış mı kontrol et
     const existing = db.users.find(
-      (u) => u.email === email || u.username === username
+      u => u.email === email || u.username === username
     );
-
-    if (existing) {
+    if (existing)
       return res.status(409).json({ message: 'Bu email veya kullanıcı adı zaten kullanılıyor.' });
-    }
 
-    // Şifreyi hashle
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Yeni kullanıcı oluştur
     const newUser = {
       id: Date.now(),
-      username,
-      email,
-      password: hashedPassword,
+      firstName,                // Ad
+      lastName,                 // Soyad
+      username,                 // Kullanıcı adı
+      email,                    // Email
+      password: hashedPassword, // Hashlenmiş şifre
       role: 'user',
       total_score: 0,
       created_at: new Date().toISOString(),
@@ -50,42 +54,46 @@ async function register(req, res) {
   }
 }
 
+// ───────────────────────────────
 // GİRİŞ YAP
+// ───────────────────────────────
 async function login(req, res) {
-  const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email ve şifre gerekli.' });
-  }
+  // identifier: email veya kullanıcı adı olabilir
+  const { identifier, password } = req.body;
+
+  if (!identifier || !password)
+    return res.status(400).json({ message: 'Tüm alanları doldur.' });
 
   try {
     const db = readDB();
 
-    const user = db.users.find((u) => u.email === email);
+    // identifier'ın @ içerip içermediğine göre email mi username mi olduğuna karar ver
+    // @ varsa email olarak ara, yoksa username olarak ara
+    const user = identifier.includes('@')
+      ? db.users.find(u => u.email === identifier)
+      : db.users.find(u => u.username === identifier);
 
-    if (!user) {
-      return res.status(401).json({ message: 'Email veya şifre hatalı.' });
-    }
+    // Kullanıcı bulunamadıysa güvenlik için hangi alanın yanlış olduğunu söyleme
+    if (!user)
+      return res.status(401).json({ message: 'Bilgiler hatalı.' });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch)
+      return res.status(401).json({ message: 'Bilgiler hatalı.' });
 
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Email veya şifre hatalı.' });
-    }
-
-    // Session'a kullanıcı bilgisini kaydet (şifre hariç)
+    // Session'a kullanıcı bilgilerini yaz (şifre hariç)
     req.session.user = {
       id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
       username: user.username,
       email: user.email,
       role: user.role,
       total_score: user.total_score,
     };
 
-    return res.status(200).json({
-      message: 'Giriş başarılı!',
-      user: req.session.user,
-    });
+    return res.status(200).json({ message: 'Giriş başarılı!', user: req.session.user });
 
   } catch (err) {
     console.error('Login hatası:', err);
@@ -93,22 +101,23 @@ async function login(req, res) {
   }
 }
 
+// ───────────────────────────────
 // ÇIKIŞ YAP
+// ───────────────────────────────
 function logout(req, res) {
   req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: 'Çıkış yapılamadı.' });
-    }
+    if (err) return res.status(500).json({ message: 'Çıkış yapılamadı.' });
     res.clearCookie('connect.sid');
     return res.status(200).json({ message: 'Çıkış yapıldı.' });
   });
 }
 
+// ───────────────────────────────
 // KİM GİRİŞ YAPMIŞ?
+// ───────────────────────────────
 function me(req, res) {
-  if (req.session && req.session.user) {
+  if (req.session && req.session.user)
     return res.status(200).json({ user: req.session.user });
-  }
   return res.status(401).json({ message: 'Giriş yapılmamış.' });
 }
 

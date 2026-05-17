@@ -5,30 +5,33 @@ const path = require('path');
 const authRoutes = require('./src/routes/auth');
 
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Session ayarları
 app.use(session({
   secret: 'oyun_sitesi_gizli_anahtar',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24, // 1 gün
+    maxAge: 1000 * 60 * 60 * 24,
   },
 }));
 
-// Statik dosyalar
-app.use(express.static(path.join(__dirname, 'public')));
+// Korumalı sayfalara cache header'ı ekle
+// Tarayıcı geri tuşuyla döndüğünde bu sayfaları cache'den değil sunucudan alsın
+app.use('/leaderboard.html', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
-// API Routes
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);
 
-// Ana sayfa
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
