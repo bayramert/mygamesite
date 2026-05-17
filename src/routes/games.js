@@ -1,9 +1,10 @@
 const express = require('express');
-const router = express.Router();
-const { getGames } = require('../controllers/gameController');
+const router  = express.Router();
+const { getGames, loadSave, writeSave } = require('../controllers/gameController');
 const { isLoggedIn } = require('../middleware/authMiddleware');
 
-// Oyun listesi: sadece giriş yapmış kullanıcılar görebilir
-router.get('/', isLoggedIn, getGames);
+router.get('/',                  isLoggedIn, getGames);
+router.get('/save/:gameId',      isLoggedIn, loadSave);
+router.post('/save/:gameId',     isLoggedIn, writeSave);
 
 module.exports = router;

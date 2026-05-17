@@ -151,9 +151,8 @@
 </div>
 
 <script>
-  // Sayfa açılınca zaten giriş yapmışsa leaderboard'a gönder
   fetch('/api/auth/me').then(r => {
-    if (r.ok) window.location.href = '/leaderboard.html';
+    if (r.ok) window.location.href = '/games.html';
   });
 
   // Sekme değiştirme
@@ -196,7 +195,7 @@
 
       if (res.ok) {
         showMessage('login-message', data.message, 'success');
-        setTimeout(() => window.location.href = '/leaderboard.html', 800);
+        setTimeout(() => window.location.href = '/games.html', 800);
       } else {
         showMessage('login-message', data.message, 'error');
       }

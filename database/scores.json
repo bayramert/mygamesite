@@ -1,0 +1,118 @@
+{
+  "saves": [
+    {
+      "userId": 1779009207802,
+      "gameId": "cat-clicker",
+      "savedAt": "2026-05-17T10:27:04.224Z",
+      "data": {
+        "state": {
+          "currency": 84,
+          "totalEarned": 185,
+          "totalClicks": 93,
+          "perClick": 3
+        },
+        "upgrades": [
+          {
+            "id": "u1",
+            "purchased": true
+          },
+          {
+            "id": "u2",
+            "purchased": false
+          },
+          {
+            "id": "u3",
+            "purchased": false
+          },
+          {
+            "id": "u4",
+            "purchased": false
+          },
+          {
+            "id": "u5",
+            "purchased": false
+          }
+        ],
+        "autoClickers": [
+          {
+            "id": "a1",
+            "count": 3
+          },
+          {
+            "id": "a2",
+            "count": 0
+          },
+          {
+            "id": "a3",
+            "count": 0
+          },
+          {
+            "id": "a4",
+            "count": 0
+          },
+          {
+            "id": "a5",
+            "count": 0
+          }
+        ]
+      }
+    },
+    {
+      "userId": 1778942059108,
+      "gameId": "cat-clicker",
+      "savedAt": "2026-05-17T10:22:13.447Z",
+      "data": {
+        "state": {
+          "currency": 0,
+          "totalEarned": 0,
+          "totalClicks": 0,
+          "perClick": 1
+        },
+        "upgrades": [
+          {
+            "id": "u1",
+            "purchased": false
+          },
+          {
+            "id": "u2",
+            "purchased": false
+          },
+          {
+            "id": "u3",
+            "purchased": false
+          },
+          {
+            "id": "u4",
+            "purchased": false
+          },
+          {
+            "id": "u5",
+            "purchased": false
+          }
+        ],
+        "autoClickers": [
+          {
+            "id": "a1",
+            "count": 0
+          },
+          {
+            "id": "a2",
+            "count": 0
+          },
+          {
+            "id": "a3",
+            "count": 0
+          },
+          {
+            "id": "a4",
+            "count": 0
+          },
+          {
+            "id": "a5",
+            "count": 0
+          }
+        ]
+      }
+    }
+  ]
+}
