@@ -5,6 +5,7 @@ const path = require('path');
 const authRoutes = require('./src/routes/auth');
 const gameRoutes = require('./src/routes/games');
 const userRoutes = require('./src/routes/users');
+const leaderboardRoutes = require('./src/routes/leaderboard');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -33,6 +34,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/auth', authRoutes);
 app.use('/api/games', gameRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
