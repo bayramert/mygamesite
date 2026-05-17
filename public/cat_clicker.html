@@ -283,7 +283,7 @@
 <!-- TOPBAR -->
 <div class="topbar">
   <span class="topbar-title">🐱 Dans Eden KEDY</span>
-  <button class="back-btn" onclick="window.location.href='/leaderboard.html'">← Geri Dön</button>
+  <button class="back-btn" onclick="saveGame().then(() => window.location.href='/games.html')">← Geri Dön</button>
 </div>
 
 <div class="game-wrapper">
@@ -493,7 +493,7 @@ function buyAuto(id) {
   recalcPerSecond();
   updateUI();
   renderAutoList();
-
+  saveGame();
   // Parıltı efekti
   const btn = document.getElementById('abtn-' + id);
   if (btn) { btn.classList.add('purchase-flash'); setTimeout(() => btn.classList.remove('purchase-flash'), 300); }
@@ -517,7 +517,7 @@ function buyUpgrade(id) {
 
   state.currency -= upg.cost;
   upg.purchased   = true;
-
+  saveGame();
   if (upg.type === 'click') state.perClick += upg.bonus;
   if (upg.type === 'multi') state.perClick *= 2;
 
@@ -620,11 +620,84 @@ function renderUpgradeList() {
 }
 
 // ══════════════════════════════════════════
+//  KAYDET / YÜKLE
+// ══════════════════════════════════════════
+const GAME_ID    = 'cat-clicker';
+const SAVE_EVERY = 10_000; // 10 saniyede bir otomatik kaydet
+
+function buildSaveData() {
+  return {
+    state: {
+      currency:    Math.floor(state.currency),
+      totalEarned: Math.floor(state.totalEarned),
+      totalClicks: state.totalClicks,
+      perClick:    state.perClick,
+    },
+    upgrades:    UPGRADES.map(u => ({ id: u.id, purchased: u.purchased })),
+    autoClickers: AUTO_CLICKERS.map(a => ({ id: a.id, count: a.count })),
+  };
+}
+
+async function saveGame() {
+  try {
+    await fetch(`/api/games/save/${GAME_ID}`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ data: buildSaveData() }),
+    });
+  } catch { /* sessizce geç */ }
+}
+
+async function loadGame() {
+  try {
+    const res  = await fetch(`/api/games/save/${GAME_ID}`);
+    if (!res.ok) return;
+    const { save } = await res.json();
+    if (!save) return; // İlk kez oynuyor, default state ile başla
+
+    // State'i geri yükle
+    Object.assign(state, save.state);
+
+    // Upgrade'leri geri yükle
+    save.upgrades.forEach(({ id, purchased }) => {
+      const upg = UPGRADES.find(u => u.id === id);
+      if (!upg || !purchased) return;
+      upg.purchased = true;
+      if (upg.type === 'click') state.perClick += upg.bonus;
+      if (upg.type === 'multi') state.perClick *= 2;
+    });
+    // perClick save'den geldiği için upgrade bonuslarını tekrar eklememek adına
+    // save.state.perClick'i direkt kullan — yukarıdaki Object.assign zaten yazdı
+    // Upgrade'ler sadece purchased flag'ini restore etmek için işlendi (bonus hesaplanmadan)
+    state.perClick = save.state.perClick; // override: kayıtlı değer kesin
+
+    // Auto-clicker count'larını geri yükle
+    save.autoClickers.forEach(({ id, count }) => {
+      const item = AUTO_CLICKERS.find(a => a.id === id);
+      if (item) item.count = count;
+    });
+
+    recalcPerSecond();
+  } catch { /* sessizce geç */ }
+}
+
+// Sayfa kapanırken/yenilenirken kaydet
+window.addEventListener('beforeunload', saveGame);
+
+// 10 saniyede bir otomatik kaydet
+setInterval(saveGame, SAVE_EVERY);
+
+// ══════════════════════════════════════════
 //  BAŞLAT
 // ══════════════════════════════════════════
-renderAutoList();
-renderUpgradeList();
-updateUI();
+async function init() {
+  await loadGame();      // Önce sunucudan yükle
+  renderAutoList();
+  renderUpgradeList();
+  updateUI();
+}
+
+init();
 </script>
 </body>
 </html>
